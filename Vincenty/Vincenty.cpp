@@ -6,7 +6,6 @@
 
 using namespace std;
 
-
 //------------------------------------------------------------------
 
 //Variables and constants: should be read by a txt config file, like ros parameter server
@@ -18,32 +17,10 @@ const double earthPolarRad = 6356752.3142;
 const double  earthEccentricity = 6.73949674227e-3;
 const double flattng = 0.0033528106647;
 
-
 double LAT1 = 0, LONG1 = 0, A_12 = 0, RANGE = 0;
 double LAT2 = 0, LONG2 = 0, A_21 = 0;
 
-/*
-input:
-  LAT1: Known Latitude (double type)
-  LONG1: Known Longitude (double type)
-  RANGE: Distanza in Miglia Nautiche fra P1-2 (float type)
-  A12: Azimuth Relativo fra P1-2
-
-Output:
-  LAT2: Lat calcolata del P2
-  LONG2: Long del P2
-  A21: Azimuth che collega 2 a 1.
-
-*/
-
-
- //----------------------------------------------------------------------------------------
-
 // Functions Definitions:
-
-
-
-
 
 
 inline char chooseVincenty() {
@@ -52,6 +29,8 @@ inline char chooseVincenty() {
 	cin >> tmp;
 	fflush(stdin);
 	if (tmp == 'D' || tmp == 'd' || tmp == 'I' || tmp == 'i') {
+		if (tmp == 'D' || tmp == 'd') cout << "Direct Vincenty Chosen" << endl;
+		else cout << "Inverse Vincenty Chosen" << endl;
 		return tmp;		
 	}
 	else {
@@ -116,6 +95,27 @@ bool dataVerifier(vector <double> &Coord, char& mode) {
 	if (confirm == 'N' || confirm == 'n') return false;
 	else if (confirm == 'Y' || confirm == 'y') return true;
 	else dataVerifier(Coord, mode);
+}
+bool keepAlive(){
+	cout << "would you like to do another run?" << endl;
+	char alive;
+	cin >> alive;
+	if (alive == 'Y' || alive == 'y' || alive == 'N' || alive == 'n') {
+		if (alive == 'Y' || alive == 'y') {
+			cout << "OK! Let's do it again!" << endl;
+			return true;
+		}
+		else {
+			cout << "Cya" << endl;
+			return false;
+		}
+			
+	}
+	else {
+		cout << "Wrong value! Please insert again!" << endl;
+		keepAlive();
+
+	}
 }
 
 //common Math Function
@@ -296,16 +296,9 @@ int main() {
 		if (dOrI == 'D' or dOrI == 'd') directVincenty(Coord);
 		else if (dOrI == 'I' or dOrI == 'i') inverseVincenty(Coord);
 	}
-	else getCoordinate(dOrI);	
+	else getCoordinate(dOrI);
 
-
-
-
-
-
-
-
-
+	if (keepAlive()) main();
 	
 }
 
