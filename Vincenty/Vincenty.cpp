@@ -10,13 +10,18 @@ using namespace std;
 
 //Variables and constants:
 
-const float pi = 3.1415926535897932384626433832795028841971693993751;
+const double pi = 3.1415927;
 const int nauticalMile = 1852;
-double LAT1 = 45.881433, LONG1 = 8.677776, A_12 = 10, RANGE = 10;
 const float earthEquatorialRad = 6378137.0;
-const float earthPolarRad = 6356752.3142;
+const double earthPolarRad = 6356752.3142;
 const double  earthEccentricity = 6.73949674227e-3;
 const double flattng = 0.0033528106647;
+
+
+double LAT1 = 0, LONG1 = 0, A_12 = 0, RANGE = 0;
+
+
+
 
 /*
 input:
@@ -46,17 +51,51 @@ double nmToMeters(double nm) {  //Returns a given nautical miles value to meters
 }
 
 
+inline char chooseVincenty() {
+	char tmp = NULL;
+	cout << "Hi! You wanna solve direct (D) or inverse (I) Vincenty?" << endl;
+	cin >> tmp;
+	fflush(stdin);
+	if (tmp == 'D' || tmp == 'd' || tmp == 'I' || tmp == 'i') {
+		return tmp;		
+	}
+	else cout << "Wrong value! Please insert again!" << endl;
+}
+
+void getCoordinate() {
+	cout << "Please insert initial Latitude" << endl;
+	cin >> LAT1;
+	fflush(stdin);
+	cout << "Please insert initial Longitude" << endl;
+	cin >> LONG1;
+	fflush(stdin);
+	cout << "Please insert initial Azimuth" << endl;
+	cin >> A_12;
+	fflush(stdin);
+	cout << "Please insert initial Distance" << endl;
+	cin >> RANGE;
+	fflush(stdin);
+}
+
+bool dataVerifier() {
+	cout << "These are saved data: " << endl << "LATITUDE: " << LAT1 << endl << "LONGITUDE: " << LONG1 << endl << "AZIMUTH: " << A_12 << endl << "RANGE: " << RANGE << endl;
+	cout << "Do you confirm? Y/N" << endl;
+	char confirm = NULL;
+	cin >> confirm;
+	fflush(stdin);
+
+	if (confirm == 'N' || confirm == 'n') return false;
+	else if (confirm == 'Y' || confirm == 'y') return true;
+	else dataVerifier();
+}
 
 
-
-
-int main() {
-
+void directVincenty(double& latitude, double& longitude, double& range, double& Azimuth) {
 	//Leggo da stdin la quaterna di dati che rappresentano tutto l' INPUT:
 
-	//scanf_s("%lf %lf %lf %lf", &LAT1, &LONG1, &RANGE, &A_12);
+		//scanf_s("%lf %lf %lf %lf", &LAT1, &LONG1, &RANGE, &A_12);
 
-	//Una volta che ricevo l'input inizio a trasformare le variabili da Deg a Rad, da NM a M
+		//Una volta che ricevo l'input inizio a trasformare le variabili da Deg a Rad, da NM a M
 
 	double LAT1Rad = toRad(LAT1);
 	double LONG1Rad = toRad(LONG1);
@@ -68,8 +107,8 @@ int main() {
 	double A21 = 0;
 
 	double U1 = atan((1 - flattng) * tan(LAT1Rad));
-	double sigma1 = atan(tan(U1) / cos(A12Rad));
-	double sinAlpha = pow(cos(U1) * sin(A12Rad), 2);
+	double sigma1 = atan2(tan(U1), cos(A12Rad));
+	double sinAlpha = cos(U1) * sin(A12Rad);
 	double sqCosAlpha = 1 - sinAlpha;
 
 	double sqU = sqCosAlpha * earthEccentricity;
@@ -85,7 +124,7 @@ int main() {
 
 
 
-	while (abs(sigma - oldSigma) > 1e-12 and cnt < 150) {
+	while (abs(sigma - oldSigma) > 1e-12 and cnt < 1150) {
 
 		cnt += 1;
 
@@ -97,7 +136,9 @@ int main() {
 
 	}
 
-	double denTanPhi2 = (pow((1 - flattng) * (pow(sinAlpha, 2) + pow(sin(U1) * sin(sigma) - cos(U1) * cos(sigma) * cos(A12Rad), 2)), 0.5));
+
+
+	double denTanPhi2 = (1 - flattng) * pow(pow(sinAlpha, 2) + (pow(sin(U1) * sin(sigma) - cos(U1) * cos(sigma) * cos(A12Rad), 2)), 0.5);
 	double numTanPhi2 = (sin(U1) * cos(sigma) + cos(U1) * sin(sigma) * cos(A12Rad));
 
 
@@ -122,13 +163,46 @@ int main() {
 		LAT2Rad = atan(tanphi2);
 	}
 
+
+
 	LAT2 = LAT2Rad * 180 / pi;
 
 	LONG2 = LONG2Rad * 180 / pi;
 
 	A21 = atan2(sinAlpha, (-sin(U1) * sin(sigma) + cos(U1) * cos(sigma) * cos(A12Rad))) * 180 / pi + 180;
 
-	cout << LAT2 << " " << LONG2 << " " << A21 << endl;
+	printf("pi: %lf\n", pi);
 
-	return 0;
+	cout << LAT2 << " " << LONG2 << " " << A21 << endl;
 }
+
+void inverseVincenty(double& latitude, double& longitude, double& range, double& Azimuth) {
+
+}
+
+
+int main() {
+	char dOrI = chooseVincenty();
+	getCoordinate();
+	bool coordOk = dataVerifier();
+
+
+	//chack coordinates
+	if (coordOk) {
+		cout << "I begin computation" << endl;
+
+		if (dOrI == 'D' or dOrI == 'd') directVincenty(LAT1, LONG1, A_12, RANGE);
+		else if (dOrI == 'I' or dOrI == 'i') inverseVincenty(LAT1, LONG1, A_12, RANGE);
+	}
+	else dataVerifier();	
+
+	
+	
+}
+
+	
+
+
+
+//TODO : Reverse Bearing e LAT2 sono COMPLETAMENTE sbagliati, la latitudine punta a un punto che in realtà sta a 3 volte le nautical miles della realtà, mentre bearing restituisce numeri senza senso
+//(tipo azimuth =10 ritorna reverse bearing = 181).
