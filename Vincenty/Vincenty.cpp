@@ -20,7 +20,7 @@ const double flattng = 0.0033528106647;
 
 
 double LAT1 = 0, LONG1 = 0, A_12 = 0, RANGE = 0;
-double LAT2 = 0, LONG2 = 0, A21 = 0;
+double LAT2 = 0, LONG2 = 0, A_21 = 0;
 
 /*
 input:
@@ -132,6 +132,8 @@ double Bfunct(double u){ return ((u / 1024) * (256 + u * (-128 + u * (74 - 47 * 
 double Cfunct(double cos){ return (flattng / 16) * (cos) * (4 + flattng * (4 - 3 * (cos)));}
 double deltaSigma(double &BBig, double &sigma, double &cos2SigmaM) { return (BBig * sin(sigma) * (cos2SigmaM + (BBig / 4) * (cos(sigma) * (-1 + 2 * pow(cos2SigmaM, 2)) - (BBig / 6) * cos2SigmaM * (-3 + 4 * pow(sin(sigma), 2) * (-3 + 4 * pow(cos2SigmaM, 2)))))); }
 double dL(double& bigC, double& sinA, double& S, double& cos2S) { return (1 - bigC) * flattng * sinA * (S + bigC * sin(S) * (cos2S + bigC * cos(S) * (-1 + 2 * pow(cos2S, 2)))); }
+double sin2Sigma(double& U1, double& U2, double& lambda) { return pow((cos(U2) * sin(lambda)), 2) + pow((cos(U1)*sin(U2)) - (sin(U1)*cos(U2)*cos(lambda)),2); }
+
 
 
 
@@ -197,9 +199,9 @@ void directVincenty(vector <double>& Coord) {
 
 	LAT2 = LAT2Rad * 180 / pi;
 	LONG2 = LONG2Rad * 180 / pi;
-	A21 = atan2(sinAlpha, (-sin(U1) * sin(sigma) + cos(U1) * cos(sigma) * cos(A12Rad))) * 180 / pi + 180;
+	A_21 = atan2(sinAlpha, (-sin(U1) * sin(sigma) + cos(U1) * cos(sigma) * cos(A12Rad))) * 180 / pi + 180;
 
-	cout << LAT2 << " " << LONG2 << " " << A21 << endl;
+	cout << LAT2 << " " << LONG2 << " " << A_21 << endl;
 }
 
 void inverseVincenty(vector <double>& Coord) {
@@ -220,23 +222,62 @@ void inverseVincenty(vector <double>& Coord) {
 	double L = LONG2Rad - LONG1Rad;
 
 	double lambda = L;
+	double oldLambda = 0.0;
+	int count = 0;
+	
+	//Verify that points are not overlapping
+	if (abs(LAT1Rad - LAT2Rad) < 1e-15 && abs(LONG2Rad - LONG1Rad) < 1e-15) { 
+		A_12 = 0;
+		A_21 = 0;
+		RANGE = 0;	
+		return; 
+	} 
 
-	if(abs(LAT1Rad - LAT2Rad) < 1e-15 && abs(LONG2Rad - LONG1Rad) < 1e-15) return; //Verify that points are not overlapping
+	double cos2Alpha = 0.0;
+	double sqSinSigma;
+	double sinSigma;
+	double cosSigma;
+	double sigma;
+	double sinAlpha;
+	double cos2SigmaM; 
+	double C;
 
 
+	while(abs(lambda - oldLambda) > 1e-12 && count < 150){
 
+		count += 1;
+		sqSinSigma = sin2Sigma(U1, U2, lambda);
+		sinSigma = sqrt(sqSinSigma);
+		cosSigma = sin(U1) * sin(U2) + cos(U1) * cos(U2) * cos(lambda);
+		sigma = atan2(sinSigma, cosSigma);
+		sinAlpha = cos(U1) * cos(U2) * sin(lambda) / sinSigma;
+		
+		cos2Alpha = 1 - pow(sinAlpha, 2);
+		C = Cfunct(cos2Alpha);
 
+		if ((1 - pow(sinAlpha, 2)) == 0) { cos2SigmaM = 0; }
+		else{cos2SigmaM = cosSigma - ((2 * sin(U1) * sin(U2)) / cos2Alpha);}
 
+		oldLambda = lambda;
+		lambda = L + dL(C, sinAlpha,sigma,cos2SigmaM);
 
+	}
 
+	double sqU = cos2Alpha * earthEccentricity;
 
+	double ABig = Afunct(sqU);
+	double BBig = Bfunct(sqU);
 
+	double dSigma = deltaSigma(BBig, sigma, cos2SigmaM);
 
+	RANGE = (earthPolarRad * ABig * (sigma - dSigma)) / nauticalMile;
 
+	A_12 = atan2((cos(U2) * sin(lambda)), (cos(U1) * sin(U2) - sin(U1) * cos(U2) * cos(lambda))) * 180 / pi;
+	A_21 = atan2((cos(U1) * sin(lambda)), (-sin(U1) * cos(U2) + cos(U1) * sin(U2)*cos(lambda))) * 180 / pi + 180;
 
+	cout << RANGE << " " << A_12 << " " << A_21 << endl;
 
-
-
+	return;
 
 }
 
@@ -256,44 +297,6 @@ int main() {
 		else if (dOrI == 'I' or dOrI == 'i') inverseVincenty(Coord);
 	}
 	else getCoordinate(dOrI);	
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
