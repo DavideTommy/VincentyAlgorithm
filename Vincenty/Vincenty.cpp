@@ -22,6 +22,10 @@ double LAT2 = 0, LONG2 = 0, A_21 = 0;
 
 // Functions Definitions:
 
+bool isChar(double val) {
+	if ('a' < val < 'Z') return true;
+	else return false;
+}
 
 inline char chooseVincenty() {
 	char tmp = NULL;
@@ -43,48 +47,87 @@ vector <double>  getCoordinate(char &mode) {
 	double value = 0.0;
 	vector <double> tmpCoordinate;
 	
-	if (mode == 'D' || mode == 'd') {
+	if (mode == 'D' || mode == 'd') {		
 		cout << "Please insert initial Latitude" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value)==false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 		cout << "Please insert initial Longitude" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value) == false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 		cout << "Please insert initial Azimuth" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value) == false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 		cout << "Please insert initial Distance" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value) == false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 	}else {
 
 		cout << "Please insert Point 1 Latitude" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value) == false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 		cout << "Please insert Point 1 Longitude" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value) == false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 		cout << "Please insert Point 2 Latitude" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value) == false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 		cout << "Please insert Point 2 Longitude" << endl;
 		cin >> value;
-		tmpCoordinate.push_back(value);
+		if (isChar(value) == false)  tmpCoordinate.push_back(value);
+		else {
+			cout << "Wrong type of data, restart!" << endl;
+			getCoordinate(mode);
+			abort;
+		}
 		fflush(stdin);
 
 	}
 
 	return tmpCoordinate;
 }
-
-bool dataVerifier(vector <double> &Coord, char& mode) {
+bool dataVerifier(vector <double>& Coord, char& mode) {
 	if (mode == 'D' || mode == 'd') cout << "These are saved data: " << endl << "LATITUDE: " << Coord[0] << endl << "LONGITUDE: " << Coord[1] << endl << "AZIMUTH: " << Coord[2] << endl << "RANGE: " << Coord[3] << endl;
 	else cout << "These are saved data: " << endl << "LAT1: " << Coord[0] << endl << "LONG1: " << Coord[1] << endl << "LAT2: " << Coord[2] << endl << "LONG2: " << Coord[3] << endl;
 
@@ -97,6 +140,8 @@ bool dataVerifier(vector <double> &Coord, char& mode) {
 	else if (confirm == 'Y' || confirm == 'y') return true;
 	else dataVerifier(Coord, mode);
 }
+
+
 bool keepAlive(){
 	cout << "would you like to do another run?" << endl;
 	char alive;
