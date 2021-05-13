@@ -83,6 +83,7 @@ vector <double>  getCoordinate(char &mode) {
 
 	return tmpCoordinate;
 }
+
 bool dataVerifier(vector <double> &Coord, char& mode) {
 	if (mode == 'D' || mode == 'd') cout << "These are saved data: " << endl << "LATITUDE: " << Coord[0] << endl << "LONGITUDE: " << Coord[1] << endl << "AZIMUTH: " << Coord[2] << endl << "RANGE: " << Coord[3] << endl;
 	else cout << "These are saved data: " << endl << "LAT1: " << Coord[0] << endl << "LONG1: " << Coord[1] << endl << "LAT2: " << Coord[2] << endl << "LONG2: " << Coord[3] << endl;
@@ -299,12 +300,8 @@ int main() {
 	else getCoordinate(dOrI);
 
 	if (keepAlive()) main();
-	
 }
 
-	
-
-
-
-//TODO : Reverse Bearing e LAT2 sono COMPLETAMENTE sbagliati, la latitudine punta a un punto che in realtà sta a 3 volte le nautical miles della realtà, mentre bearing restituisce numeri senza senso
-//(tipo azimuth =10 ritorna reverse bearing = 181).
+//TODO verify input data type (unhandled char on double exception type)
+//TODO: Prometto che aggiungerò qualche commento.
+//TODO: modificare il keepalive con il dowhile
