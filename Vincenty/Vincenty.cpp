@@ -3,6 +3,8 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
+#include <string>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -22,32 +24,81 @@ double LAT2 = 0, LONG2 = 0, A_21 = 0;
 
 // Functions Definitions:
 
-bool isChar(double val) {
-	if ('a' < val < 'Z') return true;
-	else return false;
+//Checks all the string looking for instances of chars not listed inside find_first_not_of
+bool dataInVerify(const string& data){
+
+	return data.find_first_not_of("0123456789.") == string::npos;
 }
 
-inline char chooseVincenty() {
+//Selects which calculation the user wants to execute. Is invoked until a valid function is chosen
+char chooseVincenty() {
 	char tmp = NULL;
 	cout << "Hi! You wanna solve direct (D) or inverse (I) Vincenty?" << endl;
 	cin >> tmp;
 	fflush(stdin);
-	if (tmp == 'D' || tmp == 'd' || tmp == 'I' || tmp == 'i') {
-		if (tmp == 'D' || tmp == 'd') cout << "Direct Vincenty Chosen" << endl;
-		else cout << "Inverse Vincenty Chosen" << endl;
-		return tmp;		
-	}
-	else {
-		cout << "Wrong value! Please insert again!" << endl;
-		chooseVincenty();
+	if (tmp == 'D' || tmp == 'd' ) {
+		 cout << "Direct Vincenty Chosen" << endl;
+		 return tmp;}
+	else if (tmp == 'I' || tmp == 'i'){
+		 cout << "Inverse Vincenty Chosen" << endl;}
+		 return tmp;}
+	else{
+		cout << "Wrong input, choose one of the two methods" << endl;
+  	chooseVincenty();
 	}
 }
+
+//Loads the correct set of coordinates from user input.
 vector <double>  getCoordinate(char &mode) {
-	
+
 	double value = 0.0;
 	vector <double> tmpCoordinate;
-	
-	if (mode == 'D' || mode == 'd') {		
+	string coords;
+
+			cout << "Please insert your coordinates following this pattern: ";
+
+	if (mode == 'D' || mode == 'd') {
+		cout << "LATITUDE LONGITUDE AZIMUTH RANGE" << endl;
+		cout << "|--LATD--|---LONG---|AZ|RG|" << endl;
+		getline(cin, coords);
+		cout << coords;}
+	else {
+
+		cout << "Point 1: LATITUDE  LONGITUDE | Point 2: LATITUDE  LONGITUDE" << endl;
+		cout << "|--LAT1--|---LON1---|---LAT2--|---LON2---|" << endl;
+		getline(cin, coords);
+		cout << coords;
+		}
+
+		bool verify = dataInVerify(coords);
+		vector <double> coordinates;
+
+		if(verify){
+
+			vector<string> result;
+
+			boost::split(result, coords, boost::is_any_of(" "));
+
+			for (size_t i = 0; i < 4; i++) {
+
+				double temp = stod(result[i]);
+
+				coordinates.push_back(temp);
+
+			}
+
+			return coordinates;
+
+		}else{
+   		cout << "Error in your data, retry" <<endl;
+			getCoordinate(mode);
+		}
+
+	    
+		}
+
+/*
+	if (mode == 'D' || mode == 'd') {
 		cout << "Please insert initial Latitude" << endl;
 		cin >> value;
 		if (isChar(value)==false)  tmpCoordinate.push_back(value);
@@ -122,11 +173,12 @@ vector <double>  getCoordinate(char &mode) {
 			abort;
 		}
 		fflush(stdin);
-
 	}
 
 	return tmpCoordinate;
-}
+}*/
+
+//Echoes to the user the inserted coordinates, the user is able to reject their input.
 bool dataVerifier(vector <double>& Coord, char& mode) {
 	if (mode == 'D' || mode == 'd') cout << "These are saved data: " << endl << "LATITUDE: " << Coord[0] << endl << "LONGITUDE: " << Coord[1] << endl << "AZIMUTH: " << Coord[2] << endl << "RANGE: " << Coord[3] << endl;
 	else cout << "These are saved data: " << endl << "LAT1: " << Coord[0] << endl << "LONG1: " << Coord[1] << endl << "LAT2: " << Coord[2] << endl << "LONG2: " << Coord[3] << endl;
@@ -141,7 +193,7 @@ bool dataVerifier(vector <double>& Coord, char& mode) {
 	else dataVerifier(Coord, mode);
 }
 
-
+//Asks the user if they want to perform another run.
 bool keepAlive(){
 	cout << "would you like to do another run?" << endl;
 	char alive;
@@ -155,7 +207,7 @@ bool keepAlive(){
 			cout << "Cya" << endl;
 			return false;
 		}
-			
+
 	}
 	else {
 		cout << "Wrong value! Please insert again!" << endl;
@@ -172,7 +224,7 @@ double nmToMeters(double nm) {  //Returns a given nautical miles value to meters
 	return nm * nauticalMile;
 }
 
-
+//Functions that model equation shared by both the methods.
 double Afunct(double u){ return (1 + (u / 16384) * (4096 + u * (-768 + u * (320 - 175 * u))));}
 double Bfunct(double u){ return ((u / 1024) * (256 + u * (-128 + u * (74 - 47 * u))));}
 double Cfunct(double cos){ return (flattng / 16) * (cos) * (4 + flattng * (4 - 3 * (cos)));}
@@ -182,11 +234,11 @@ double sin2Sigma(double& U1, double& U2, double& lambda) { return pow((cos(U2) *
 
 
 
-
+//Main direct Vincenty function.
 void directVincenty(vector <double>& Coord) {
-	//Una volta che ricevo l'input inizio a trasformare le variabili da Deg a Rad, da NM a M
 
-	double LAT1Rad = toRad(Coord[0]); 
+
+	double LAT1Rad = toRad(Coord[0]);
 	double LONG1Rad = toRad(Coord[1]);
 	double A12Rad = toRad(Coord[2]);
 	double meterRange = nmToMeters(Coord[3]);
@@ -233,10 +285,10 @@ void directVincenty(vector <double>& Coord) {
 	else {
 
 		double tanphi2 = numTanPhi2 / denTanPhi2;
-		double C = Cfunct(sqCosAlpha);  
+		double C = Cfunct(sqCosAlpha);
 		double lambda = atan2((sin(sigma) * sin(A12Rad)), (cos(U1) * cos(sigma) - sin(U1) * sin(sigma) * cos(A12Rad)));
-		double omega = lambda - dL(C, sinAlpha, sigma, cos2SigmaM); 
-		
+		double omega = lambda - dL(C, sinAlpha, sigma, cos2SigmaM);
+
 		LONG2Rad = LONG1Rad + omega;
 		LAT2Rad = atan(tanphi2);
 	}
@@ -270,14 +322,14 @@ void inverseVincenty(vector <double>& Coord) {
 	double lambda = L;
 	double oldLambda = 0.0;
 	int count = 0;
-	
+
 	//Verify that points are not overlapping
-	if (abs(LAT1Rad - LAT2Rad) < 1e-15 && abs(LONG2Rad - LONG1Rad) < 1e-15) { 
+	if (abs(LAT1Rad - LAT2Rad) < 1e-15 && abs(LONG2Rad - LONG1Rad) < 1e-15) {
 		A_12 = 0;
 		A_21 = 0;
-		RANGE = 0;	
-		return; 
-	} 
+		RANGE = 0;
+		return;
+	}
 
 	double cos2Alpha = 0.0;
 	double sqSinSigma;
@@ -285,7 +337,7 @@ void inverseVincenty(vector <double>& Coord) {
 	double cosSigma;
 	double sigma;
 	double sinAlpha;
-	double cos2SigmaM; 
+	double cos2SigmaM;
 	double C;
 
 
@@ -297,7 +349,7 @@ void inverseVincenty(vector <double>& Coord) {
 		cosSigma = sin(U1) * sin(U2) + cos(U1) * cos(U2) * cos(lambda);
 		sigma = atan2(sinSigma, cosSigma);
 		sinAlpha = cos(U1) * cos(U2) * sin(lambda) / sinSigma;
-		
+
 		cos2Alpha = 1 - pow(sinAlpha, 2);
 		C = Cfunct(cos2Alpha);
 
@@ -328,7 +380,7 @@ void inverseVincenty(vector <double>& Coord) {
 }
 
 
-int main() {	
+int main() {
 
 	char dOrI = chooseVincenty();
 	vector <double> Coord = getCoordinate(dOrI);
@@ -348,5 +400,5 @@ int main() {
 }
 
 //TODO verify input data type (unhandled char on double exception type)
-//TODO: Prometto che aggiungerò qualche commento.
+//TODO: Prometto che aggiungerï¿½ qualche commento.
 //TODO: modificare il keepalive con il dowhile
